@@ -1,6 +1,7 @@
 GET / HTTP/1.1
 Host: localhost:8080
 Connection: keep-alive
+Cache-Control: max-age=0
 sec-ch-ua: " Not A;Brand";v="99", "Chromium";v="96", "Google Chrome";v="96"
 sec-ch-ua-mobile: ?0
 sec-ch-ua-platform: "macOS"
@@ -13,4 +14,6 @@ Sec-Fetch-User: ?1
 Sec-Fetch-Dest: document
 Accept-Encoding: gzip, deflate, br
 Accept-Language: ja-US,ja;q=0.9,en-US;q=0.8,en;q=0.7
+Range: bytes=44-44
+If-Range: "2d-5913a76187bc0"
 
