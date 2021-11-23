@@ -14,6 +14,6 @@ Sec-Fetch-User: ?1
 Sec-Fetch-Dest: document
 Accept-Encoding: gzip, deflate, br
 Accept-Language: ja-US,ja;q=0.9,en-US;q=0.8,en;q=0.7
-Range: bytes=44-44
-If-Range: "2d-5913a76187bc0"
+If-None-Match: "2d-59b0f76976000"
+If-Modified-Since: Wed, 01 Jan 2020 08:00:00 GMT
 
