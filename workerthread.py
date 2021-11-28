@@ -1,8 +1,10 @@
 import os
+import re
 import traceback
 from datetime import datetime
 from typing import Tuple, Optional
 from threading import Thread
+from pprint import pformat
 from socket import socket
 import textwrap
 
@@ -53,6 +55,25 @@ class WorkerThread(Thread):
                 content_type = "text/html"
                 response_line = "HTTP/1.1 200 OK\r\n"
 
+            elif path == "/show_request":
+                html = f"""\
+                    <html>
+                    <body>
+                        <h1>Request Line:</h1>
+                        <p>
+                            {method} {path} {http_version}
+                        </p>
+                        <h1>Headers:</h1>
+                        <pre>{pformat(request_header)}</pre>
+                        <h1>Body:</h1>
+                        <pre>{request_body.decode("utf-8", "ignore")}</pre>
+                    </body>
+                    </html>
+                """
+
+                response_body = textwrap.dedent(html).encode()
+                content_type = "text/html"
+                response_line = "HTTP/1.1 200 OK\r\n"
             else:
                 try:
                     response_body = self.get_static_file_content(path)
@@ -79,14 +100,19 @@ class WorkerThread(Thread):
             print("Ending connection to client...")
             self.client_socket.close()
 
-    def parse_http_request(self, request: bytes) -> Tuple[str, str, str, bytes, bytes]:
+    def parse_http_request(self, request: bytes) -> Tuple[str, str, str, dict, bytes]:
         request_line, remain = request.split(b"\r\n", maxsplit=1)
         request_header, request_body = remain.split(
             b"\r\n\r\n", maxsplit=1)
 
         method, path, http_version = request_line.decode().split(" ")
 
-        return method, path, http_version, request_header, request_body
+        headers = {}
+        for header_row in request_header.decode().split("\r\n"):
+            key, value = re.split(r": *", header_row, maxsplit=1)
+            headers[key] = value
+
+        return method, path, http_version, headers, request_body
 
     def get_static_file_content(self, path: str) -> bytes:
         relative_path = path.lstrip("/")
