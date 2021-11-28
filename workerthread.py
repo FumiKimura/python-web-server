@@ -1,9 +1,10 @@
 import os
 import traceback
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, Optional
 from threading import Thread
 from socket import socket
+import textwrap
 
 
 class WorkerThread(Thread):
@@ -36,15 +37,35 @@ class WorkerThread(Thread):
             method, path, http_version, request_header, request_body = self.parse_http_request(
                 request)
 
-            try:
-                response_body = self.get_static_file_content(path)
+            response_body: bytes
+            content_type: Optional[str]
+            response_line: str
+
+            if path == "/now":
+                html = f"""\
+                    <html>
+                    <body>
+                        <h1>Now: {datetime.now()}</h1>
+                    </body>
+                    </html>
+                """
+                response_body = textwrap.dedent(html).encode()
+                content_type = "text/html"
                 response_line = "HTTP/1.1 200 OK\r\n"
 
-            except OSError:
-                response_body = b"<html><body><h1>404 Not Found</h1></body></html>"
-                response_line = "HTTP/1.1 404 NOT FOUND \r\n"
+            else:
+                try:
+                    response_body = self.get_static_file_content(path)
+                    content_type = None
+                    response_line = "HTTP/1.1 200 OK\r\n"
 
-            response_header = self.build_response_header(path, response_body)
+                except OSError:
+                    response_body = b"<html><body><h1>404 Not Found</h1></body></html>"
+                    content_type = "text/html"
+                    response_line = "HTTP/1.1 404 NOT FOUND \r\n"
+
+            response_header = self.build_response_header(
+                path, response_body, content_type)
             response = (response_line + response_header +
                         "\r\n").encode() + response_body
 
@@ -73,13 +94,16 @@ class WorkerThread(Thread):
         with open(static_file_path, "rb") as f:
             return f.read()
 
-    def build_response_header(self, path: str, response_body: bytes) -> str:
-        if "." in path:
-            ext = path.rsplit(".", maxsplit=1)[-1]
-        else:
-            ext = ""
+    def build_response_header(self, path: str, response_body: bytes, content_type: Optional[str]) -> str:
 
-        content_type = self.MIME_TYPES.get(ext, "application/octet-stream")
+        if content_type is None:
+            if "." in path:
+                ext = path.rsplit(".", maxsplit=1)[-1]
+            else:
+                ext = ""
+
+            content_type = self.MIME_TYPES.get(ext, "application/octet-stream")
+
         response_header = ""
         response_header += f"Date: {datetime.utcnow().strftime('%a, %b %d %Y %H:%M:%S GMT')}\r\n"
         response_header += "Host: HenaServer/0.1\r\n"
