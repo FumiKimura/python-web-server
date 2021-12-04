@@ -1,8 +1,8 @@
 import socket
-from workerthread import WorkerThread
+from henango.server.worker import Worker
 
 
-class WebServer:
+class Server:
 
     def serve(self):
         print("starting server...")
@@ -17,7 +17,7 @@ class WebServer:
                 print(
                     f"connection with client ended.. remote_address: {address}")
 
-                thread = WorkerThread(client_socket, address)
+                thread = Worker(client_socket, address)
                 thread.start()
 
         finally:
@@ -31,8 +31,3 @@ class WebServer:
         server_socket.listen(10)
 
         return server_socket
-
-
-if __name__ == '__main__':
-    server = WebServer()
-    server.serve()
