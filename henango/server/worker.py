@@ -49,6 +49,9 @@ class Worker(Thread):
 
             response = view(request)
 
+            if isinstance(response.body, str):
+                response.body = response.body.encode()
+
             response_line = self.build_response_line(response)
 
             response_header = self.build_response_header(response, request)
@@ -89,11 +92,10 @@ class Worker(Thread):
         if response.content_type is None:
             if "." in request.path:
                 ext = request.path.rsplit(".", maxsplit=1)[-1]
+                response.content_type = self.MIME_TYPES.get(
+                    ext, "application/octet-stream")
             else:
-                ext = ""
-
-            response.content_type = self.MIME_TYPES.get(
-                ext, "application/octet-stream")
+                response.content_type = "text/html; charset=UTF-8"
 
         response_header = ""
         response_header += f"Date: {datetime.utcnow().strftime('%a, %b %d %Y %H:%M:%S GMT')}\r\n"
