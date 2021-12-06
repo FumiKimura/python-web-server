@@ -1,5 +1,4 @@
 from henango.urls.resolver import URLResolver
-import os
 import re
 import traceback
 from urls import url_patterns
@@ -9,7 +8,6 @@ from threading import Thread
 from typing import Tuple
 from henango.http.request import HTTPRequest
 from henango.http.response import HTTPResponse
-import settings
 from urls import url_patterns
 
 
@@ -25,6 +23,7 @@ class Worker(Thread):
 
     STATUS_LINES = {
         200: "200 OK",
+        302: "302 Found",
         404: "404 Not Found",
         405: "405 Method Not Allowed"
     }
@@ -81,6 +80,13 @@ class Worker(Thread):
             key, value = re.split(r": *", header_row, maxsplit=1)
             headers[key] = value
 
+        cookies = {}
+        if "Cookie" in headers:
+            cookie_strings = headers["Cookie"].split("; ")
+            for cookie_string in cookie_strings:
+                name, value = cookie_string.split("=", maxsplit=1)
+                cookies[name] = value
+
         return HTTPRequest(path=path, method=method, http_version=http_version, headers=headers, body=request_body)
 
     def build_response_line(self, response: HTTPResponse) -> str:
@@ -103,5 +109,11 @@ class Worker(Thread):
         response_header += f"Content-Length: {len(response.body)}\r\n"
         response_header += "Connection: Close\r\n"
         response_header += f"Content-Type: {response.content_type}\r\n"
+
+        for header_name, header_value in response.headers.items():
+            response_header += f"{header_name}: {header_value}\r\n"
+
+        for cookie_name, cookie_value in response.cookies.items():
+            response_header += f"Set-Cookie: {cookie_name}={cookie_value}\r\n"
 
         return response_header
