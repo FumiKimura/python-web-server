@@ -10,7 +10,6 @@ def now(request: HTTPRequest) -> HTTPResponse:
 
     context = {"now": datetime.now()}
     body = render("now.html", context)
-    content_type = "text/html; charset=UTF-8"
 
     return HTTPResponse(body=body)
 
@@ -62,7 +61,7 @@ def login(request: HTTPRequest) -> HTTPResponse:
 
 
 def welcome(request: HTTPRequest) -> HTTPResponse:
-
+    print(request.cookies)
     if "username" not in request.cookies:
         return HTTPResponse(status_code=302, headers={"Location": "/login"})
 

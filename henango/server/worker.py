@@ -87,7 +87,7 @@ class Worker(Thread):
                 name, value = cookie_string.split("=", maxsplit=1)
                 cookies[name] = value
 
-        return HTTPRequest(path=path, method=method, http_version=http_version, headers=headers, body=request_body)
+        return HTTPRequest(path=path, method=method, http_version=http_version, cookies=cookies, headers=headers, body=request_body)
 
     def build_response_line(self, response: HTTPResponse) -> str:
         status_line = self.STATUS_LINES[response.status_code]
