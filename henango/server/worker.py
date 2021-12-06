@@ -113,7 +113,21 @@ class Worker(Thread):
         for header_name, header_value in response.headers.items():
             response_header += f"{header_name}: {header_value}\r\n"
 
-        for cookie_name, cookie_value in response.cookies.items():
-            response_header += f"Set-Cookie: {cookie_name}={cookie_value}\r\n"
+        for cookie in response.cookies:
+            cookie_header = f"Set-Cookie: {cookie.name}={cookie.value}"
+            if cookie.expires is not None:
+                cookie_header += f"; Expires={cookie.expires.strftime('%a, %d %b %Y %H:%M:%S GMT')}"
+            if cookie.max_age is not None:
+                cookie_header += f"; Max-Age={cookie.max_age}"
+            if cookie.domain:
+                cookie_header += f"; Domain={cookie.domain}"
+            if cookie.path:
+                cookie_header += f"; Path={cookie.path}"
+            if cookie.secure:
+                cookie_header += "; Secure"
+            if cookie.http_only:
+                cookie_header += "; HttpOnly"
+
+            response_header += cookie_header + "\r\n"
 
         return response_header
